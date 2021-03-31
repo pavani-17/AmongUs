@@ -575,6 +575,12 @@ int main(int argc, char* argv[]) {
    std::mt19937 gen(rd());
    std::uniform_int_distribution<> distrib(0, 9);
 
+   i = distrib(gen);
+   j = distrib(gen);
+
+   imposterPos.x =  (float)i/6 - 0.8f + 0.25f/6;
+   imposterPos.y =  (float)j/6 - 0.8f + 0.25f/6;
+
    button1_posx = distrib(gen);
    button1_posy = distrib(gen);
 
@@ -860,7 +866,6 @@ int main(int argc, char* argv[]) {
    while (!glfwWindowShouldClose(window)) {
 
       glUseProgram(shaderProgram);
-
 
       glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
       processInput(window, vertices, 2*len);
