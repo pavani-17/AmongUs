@@ -5,6 +5,7 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <bits/stdc++.h>
 #include <random>
+#include <ctime>
 
 
 #define GLT_IMPLEMENTATION
@@ -47,6 +48,7 @@ const unsigned int SCR_HEIGHT = 800;
 int score = 0;
 int tasks = 0;
 bool spinObj = 0, spinCam=0;
+int gameStatus = 0;
 bool imposterMoving = false;
 bool imposterDisplay = true;
 bool button2Activated = false;
@@ -279,6 +281,7 @@ bool collide(float x1, float y1, float x2, float y2, float x3, float y3, float x
 // Handle Input
 void processInput(GLFWwindow *window, float vertices[], int len)
 {
+  
    bool press=false;
    float speed = 0.01f;
    if(glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
@@ -349,13 +352,13 @@ void processInput(GLFWwindow *window, float vertices[], int len)
 
          // Rectangle Sides
          
-         if(collide(vertices[i], vertices[i+1], vertices[i+2], vertices[i+3], objNewPos.x + x, objNewPos.y + y, objNewPos.x, objNewPos.y))
+         if(collide(vertices[i], vertices[i+1], vertices[i+2], vertices[i+3], objNewPos.x + x, objNewPos.y + y, objNewPos.x - 0.08f/6, objNewPos.y - 0.1f/6))
          {
             collision = true;
             break;
          }
 
-         if(collide(vertices[i], vertices[i+1], vertices[i+2], vertices[i+3], objNewPos.x + x, objNewPos.y + y, objNewPos.x + 0.5f/6, objNewPos.y + 0.5f/6))
+         if(collide(vertices[i], vertices[i+1], vertices[i+2], vertices[i+3], objNewPos.x + x, objNewPos.y + y, objNewPos.x + 0.35f/6, objNewPos.y + 0.5f/6))
          {
             collision = true;
             break;
@@ -364,13 +367,13 @@ void processInput(GLFWwindow *window, float vertices[], int len)
          x=0.35f/6;
          y=-0.1f/6;
 
-         if(collide(vertices[i], vertices[i+1], vertices[i+2], vertices[i+3], objNewPos.x + x, objNewPos.y + y, objNewPos.x, objNewPos.y))
+         if(collide(vertices[i], vertices[i+1], vertices[i+2], vertices[i+3], objNewPos.x + x, objNewPos.y + y, objNewPos.x - 0.08f/6, objNewPos.y - 0.1f/6))
          {
             collision = true;
             break;
          }
 
-         if(collide(vertices[i], vertices[i+1], vertices[i+2], vertices[i+3], objNewPos.x + x, objNewPos.y + y, objNewPos.x + 0.5f/6, objNewPos.y + 0.5f/6))
+         if(collide(vertices[i], vertices[i+1], vertices[i+2], vertices[i+3], objNewPos.x + x, objNewPos.y + y, objNewPos.x + 0.35f/6, objNewPos.y + 0.5f/6))
          {
             collision = true;
             break;
@@ -391,6 +394,12 @@ void processInput(GLFWwindow *window, float vertices[], int len)
 
    pos_x = ((objPosition.x)+0.8)*6;
    pos_y = ((objPosition.y)+0.8)*6;
+
+   if(tasks == 2 && pos_x == 9 && pos_y == 9)
+   {
+      gameStatus = 1;
+      return;
+   }
 
    impos_x = ((imposterPos.x)+0.8)*6;
    impos_y = ((imposterPos.y)+0.8)*6;
@@ -433,14 +442,16 @@ void processInput(GLFWwindow *window, float vertices[], int len)
 
    if(imposterDisplay)
    {
+      int dest = path[impos_x*height + impos_y][pos_x*height+pos_y];
+      if(dest == impos_x*height + impos_y)
+      {
+         gameStatus = -1;
+         return;
+      }
+
       if(!imposterMoving)
       {
-         int dest = path[impos_x*height + impos_y][pos_x*height+pos_y];
-         if(dest == impos_x*height + impos_y)
-         {
-            return;
-         }
-         else if(dest == impos_x*height + impos_y + 1)
+         if(dest == impos_x*height + impos_y + 1)
          {
             imposDirection = 1; // Up
          }
@@ -782,6 +793,14 @@ int main(int argc, char* argv[]) {
       semi_circle[2*i+1] = 0.35f/6 +radius * sin(i * twicePi / triangleAmount);
    }
 
+   float success_arr[] = {
+      0.7f, 0.7f,
+      0.87f, 0.867f,
+      0.7f, 0.867f,
+      0.7f, 0.7f,
+      0.87f, 0.867f,
+      0.867f, 0.7f,
+   };
 
 
 
@@ -790,6 +809,7 @@ int main(int argc, char* argv[]) {
    unsigned int circ, circ_A;
    unsigned int semi_circ, semi_circ_A;
    unsigned int visor, visor_A;
+   unsigned int success_b, success_A;
 
    glGenVertexArrays(1, &circ_A);
    glGenBuffers(1, &circ);
@@ -800,6 +820,10 @@ int main(int argc, char* argv[]) {
    glGenVertexArrays(1, &semi_circ_A);
    glGenBuffers(1, &semi_circ);
    
+   glGenVertexArrays(1, &success_A);
+   glGenBuffers(1, &success_b);
+
+
    glGenVertexArrays(1, &VAO);
    glGenBuffers(1, &VBO);
    glGenVertexArrays(1, &VAO1);
@@ -843,6 +867,12 @@ int main(int argc, char* argv[]) {
    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2*sizeof(float), (void*)0);
    glEnableVertexAttribArray(0);
 
+   glBindVertexArray(success_A);
+   glBindBuffer(GL_ARRAY_BUFFER, success_b);   
+   glBufferData(GL_ARRAY_BUFFER, sizeof(success_arr), success_arr,GL_STATIC_DRAW);
+   glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2*sizeof(float), (void*)0);
+   glEnableVertexAttribArray(0);
+
    
    glm::mat4 projection;
    projection = glm::perspective(glm::radians(45.0f), 800.0f/600.0f, 0.1f, 100.0f);
@@ -862,8 +892,74 @@ int main(int argc, char* argv[]) {
 
    GLTtext *text = gltCreateText();
 
+   time_t start_time, end_time, current_time;;
+   time(&start_time);
+   end_time = start_time + 200;
+
   
    while (!glfwWindowShouldClose(window)) {
+
+      time(&current_time);
+      if(current_time > end_time)
+      {
+         gameStatus = -1;
+      }
+
+      if(gameStatus == -1)
+      {
+         
+         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+         sprintf(str, "Game Over \nYou Lost :(\n");
+         gltSetText(text, str);
+         gltBeginDraw();
+         gltColor(1.0f, 0.0f, 0.0f, 0.0f);
+         gltDrawText2D(text, 0.8f, 0.8f, 10);
+         gltEndDraw();
+
+         glfwSwapBuffers(window);
+         glfwPollEvents();
+         sleep(2);
+
+         glfwSetWindowShouldClose(window, true);
+         continue;
+      }
+
+      if(gameStatus == 1)
+      {
+         
+         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+         sprintf(str, "Game Over \nYou Won :)\n");
+         gltSetText(text, str);
+         gltBeginDraw();
+         gltColor(0.0f, 1.0f, 0.0f, 0.0f);
+         gltDrawText2D(text, 0.8f, 0.8f, 10);
+         gltEndDraw();
+
+         glfwSwapBuffers(window);
+         glfwPollEvents();
+         sleep(2);
+
+         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);         
+         sprintf(str, "Score: %d\nTasks: %d/2\nTime: %ld\n",score,tasks,end_time-current_time);
+         gltSetText(text, str);
+         gltColor(0.0f, 1.0f, 0.0f, 0.0f);
+         gltDrawText2D(text, 2.0f, 2.0f, 5);
+
+         gltEndDraw();
+
+         glfwSwapBuffers(window);
+         glfwPollEvents();
+         sleep(2);
+
+         glfwSetWindowShouldClose(window, true);
+         continue;
+      }
+
 
       glUseProgram(shaderProgram);
 
@@ -888,6 +984,14 @@ int main(int argc, char* argv[]) {
 
       glBindVertexArray(VAO);
       glDrawArrays(GL_LINES, 0, len);
+
+      if(tasks == 2)
+      {
+         color = glm::vec3(0.0f, 1.0f, 0.0f);
+         glUniform3fv(colorLoc, 1, glm::value_ptr(color));
+         glBindVertexArray(success_A);
+         glDrawArrays(GL_TRIANGLES, 0, 6);
+      }
 
       model = glm::translate(model, objPosition);
       glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
@@ -988,16 +1092,15 @@ int main(int argc, char* argv[]) {
       glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
       glDrawArrays(GL_TRIANGLE_FAN, 0, triangleAmount);
 
-      sprintf(str, "Score: %d\nTasks: %d/2\nLight: On\nTime: \n",score,tasks);
+      sprintf(str, "Score:%d\nTasks:%d/2\nTime:%ld\n",score,tasks,end_time-current_time);
 
       gltSetText(text, str);
 
 
       gltBeginDraw();
       gltColor(0.0f, 1.0f, 1.0f, 0.0f);
-      gltDrawText2D(text, 0.8f, 0.8f, 1);
+      gltDrawText2D(text, 0.8f, 0.8f, 1.4);
       gltEndDraw();
-
 
 
       glfwSwapBuffers(window);
